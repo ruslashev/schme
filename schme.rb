@@ -1,30 +1,32 @@
 Env = {
-  :+      => ->(a, b) { a + b },
-  :quote  => ->(*a)   { a.flatten 1 },
   :eq?    => ->(a, b) { a == b },
   :atom?  => ->(a)    { !a.is_a? Array },
   :list?  => ->(a)    { a.is_a? Array }
 }
+%w(+ - * /).each { |op| Env[op.to_sym] = ->(*a) { a.reduce(op.to_sym) } }
 
 def read
   print "> "
   exp = []
   begin
     Kernel.eval("exp = " + gets.chomp.gsub(/([()])|([^()\d ]+)|(\d+)/) { |s| {"(" => "[", ")" => "]", $2 => ":"+$2.to_s, $3 => $3.to_i.to_s}[s]+(s == "(" ? " " : ",") }.gsub(/,\]/, "]").chop)
-  rescue Exception
-    puts "There are mismatched parentheses."
+  rescue Interrupt      # Ctrl+C
+    puts "", "Bye!"
+    exit
+  rescue SyntaxError    # (() for example
+    puts "Messed up Parentheses!"
+    exit
+  rescue StandardError  # The rest, also Ctrl+D
+    puts "", "Something gone wrong!"
     exit
   end
-  #puts "parsed to \"#{exp}\""
   exp
 end
 
 def eval exp
   head, *rest = exp
-  #puts "got '#{head}' as head and '#{rest.inspect}' as rest"
-
   rest.map! { |i| i.is_a?(Array) ? eval(i) : i }
-  Env[head].call *rest
+  Env[head].call(*rest) if Env.has_key?(head)
 end
 
 loop {
