@@ -1,19 +1,19 @@
 %{
-  #include <fstream>
-  #define YY_DECL extern "C" int yylex()
+	#include "schme.tab.h"
 %}
 
+identifier		[_a-zA-Z][_a-zA-Z0-9]*
+integer			[\+\-]?[0-9]+
+double			[\+\-]?[0-9]+\.[0-9]*
+
+%option noyywrap
+
+%%
+[ \t\n\r]+				;
+indentifier				{ yylval.sval = strdup(yytext);	return INDENT; }
+integer					{ yylval.ival = atoi(yytext); 	return INTEGR; }
+double					{ yylval.fval = atof(yytext); 	return DOUBLE; }
+[-+*/()=]				{ return *yytext; }
+
 %%
 
-[ \t\n]					; 
-[\+\-]?[0-9]+\.[0-9]+	{ printf("Found a floating-point number: %s\n", yytext); }
-[\+\-]?[0-9]+			{ printf("Found an integer: %s\n", yytext); }
-[a-zA-Z0-9]+			{ printf("Found a string: %s\n", yytext); }
-
-%%
-
-int main()
-{
-
-	yylex();
-}
