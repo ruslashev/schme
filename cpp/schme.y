@@ -1,65 +1,63 @@
 %{
-	#include <fstream>
-	#include <string>
-	#include <cstdlib>
-	
-	using namespace std;
+	#include "main.hpp"
 
-	void yyerror(const char* s) { fprintf(stderr, "Error: %s", s); exit(1); }
-
-	extern int yylex();
-	extern int yyparse();
 	extern FILE *yyin;
+	
+	int yyparse();
+	int yylex();
+	void yyerror(const char* s);
 %}
 
-%token <sval> INDENT
-%token <ival> INTEGR
-%token <fval> DOUBLE
-%left '-' '+' '*' '/'
-
 %union {
-	char* sval;
 	int ival;
-	float fval;
+	char sym;
 }
 
-%%
-
-program:
-	program statement '\n'
-	|
-	;
-
-statement:
-	INDENT expr { printf("String!: %s\n", $1); }
-	| INTEGR expr { printf("Integer!: %d\n", $1); }
-	| DOUBLE expr { printf("Double!: %f\n", $1); }
-	;
-
-expr:
-	INTEGR
-	| DOUBLE
-	;
-// 	| expr '+' expr { $$ = $1 + $3; }
-// 	| expr '-' expr { $$ = $1 - $3; }
-// 	| expr '*' expr { $$ = $1 * $3; }
-// 	| expr '/' expr { $$ = $1 / $3; }
-// 	| '(' expr ')' { $$ = $2; }
-// 	;
+%start program
+%token <ival> INTEGER
+%type <ival> exp
+%left PLUS
+%left MINUS
+%left MULT
+%left DIV
 
 %%
 
-int main()
+program:	
+			| exp { cout << "Result: " << $1 << endl; }
+			;
+
+exp: 	INTEGER { $$ = $1; }
+		| exp PLUS exp	{ $$ = $1 + $3; }
+		| exp MINUS exp	{ $$ = $1 - $3; }
+		| exp MULT exp	{ $$ = $1 * $3; }
+		| exp DIV exp	{ $$ = $1 / $3; }
+		;
+
+%%
+
+void yyerror(const char *s)
 {
-	FILE* ifile = fopen("testfile.shm", "r");
-	if (!ifile) {
-		fprintf(stderr, "No file %s found!\n", "testfile.shm");
-		return 1;
-	}
-	// let flex read from a file instead of STDIN:
-	yyin = ifile;
+	int yylineno;
+	char* yytext;
 
-	while (!feof(yyin))
-		yyparse();
+	fprintf(stderr, "Error: %s at line %i at symbol %s\n", s, yylineno, yytext);
+	
+	exit(1);
+}
+
+int main(int argc, char **argv)
+{
+	if (argc > 0)
+	{
+		FILE* ifile = freopen("testfile.shm", "r", stdin);
+		yyin = ifile;
+
+		while (!feof(yyin))
+			yyparse();
+	} else {
+		yyin = stdin;
+	}
+	return 0;
 }
 
