@@ -4,24 +4,21 @@
 
 	int yylex();
 	void yyerror(const char* s);
-	
-//identifier		[_a-zA-Z][_a-zA-Z0-9]*
-//integer			[\+\-]?[0-9]+
-//double			[\+\-]?[0-9]+\.[0-9]*
-
-//[-+*/()]				{ return *yytext; }
 %}
+
+identifier		[_a-zA-Z][_a-zA-Z0-9]*
+integer			[\+\-]?[0-9]+
+float			[\+\-]?[0-9]+\.[0-9]*
 
 %%
 
 [ \t]+					;
-[0-9]+					{ yylval.ival = atoi(yytext); return INTEGER; }
-[\n]					{ yylineno++; }
-"+"						{ yylval.sym = '+'; return PLUS; }
-"-"						{ yylval.sym = '-'; return MINUS; }
-"*"						{ yylval.sym = '*'; return MULT; }
-"/"						{ yylval.sym = '/'; return DIV; }
-.						{ yyerror("unrecognized token"); } 	
+identifier				{ yylval.sval = new string(yytext, yyleng); return INDENT; }
+integer					{ yylval.ival = atoi(yytext); return INTEGER; }
+float					{ yylval.fval = atof(yytext); return FLOAT; }
+\n						{ yylineno++; }
+[+\-*/(){}<>.,]|!=|==|=	{ yylval.sym = strdup(yytext); return *yytext; }
+.+						{ yyerror("unrecognized token"); } 	
 
 %%
 

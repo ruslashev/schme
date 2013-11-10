@@ -1,15 +1,27 @@
 all: schme
 	@printf "\n----------\n\n"
-	./schme
+	./schme testfile.shm
 
-schme.tab.cpp schme.tab.hpp: schme.y
-	bison -d -o schme.tab.cpp schme.y
+OBJS = parser.o codegen.o main.o tokens.o
 
-lex.yy.cpp: schme.l schme.tab.hpp
-	flex -o lex.yy.cpp schme.l
-
-schme: lex.yy.cpp schme.tab.cpp schme.tab.hpp
-	clang++ schme.tab.cpp lex.yy.cpp -o schme -lfl 
-
+CPPFLAGS = `llvm-config --cppflags`
+LDFLAGS = `llvm-config --ldflags`
+LIBS = `llvm-config --libs`
+ 
 clean:
-	@rm lex.yy.* schme.tab.* schme 
+	@rm -i parser.{c,h}pp schme lexer.cpp $(OBJS)
+
+parser.cpp: parser.y
+	bison -d -o $@ $^
+
+parser.hpp: parser.cpp
+
+lexer.cpp: lexer.l parser.hpp
+	flex -o $@ $^
+
+%.o: %.cpp
+	g++ -c $(CPPFLAGS) -o $@ $<
+
+schme: $(OBJS)
+	g++ -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
+
