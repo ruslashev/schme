@@ -7,25 +7,24 @@ Env = {
 
 def read
   print "> "
-  exp = []
-  Kernel.eval("exp = " + gets.chomp.gsub(/([()])|([^()\d ]+)|(\d+)/) { |s| {"(" => "[", ")" => "]", $2 => ":"+$2.to_s, $3 => $3.to_i.to_s}[s]+(s == "(" ? " " : ",") }.gsub(/,\]/, "]").chop)
-  p exp
-  exp
-rescue Interrupt => e # Ctrl+C
-  exit
-rescue Exception => e
+  exp = gets.chomp.gsub(/([()])|([^()\d ]+)|(\d+)/) { |s| {"(" => "[", ")" => "]", $2 => ":"+$2.to_s, $3 => $3.to_i.to_s}[s]+(s == "(" ? " " : ",") }.gsub(/,\]/, "]").chop
+  ast = Kernel.eval(exp)
+  ast
+rescue SyntaxError
   print "Syntax Error"
+  return []
 end
 
 def eval exp
+  return if exp == []
   head, *rest = exp
   rest.map! { |i| i.is_a?(Array) ? eval(i) : i }
   if Env.has_key?(head)
     Env[head].call(*rest)
   else
-    puts "Unknown identifier \"#{head}\""
-    exit 2
+    print "Unknown identifier \"#{head}\""
   end
 end
 
 loop { print(eval(read), "\n") } # authentic repl
+
