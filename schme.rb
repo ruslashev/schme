@@ -22,9 +22,13 @@ def eval exp
   if Env.has_key?(head)
     Env[head].call(*rest)
   else
-    print "Unknown identifier \"#{head}\""
+    print "Unknown operator \"#{head}\""
   end
 end
 
-loop { print(eval(read), "\n") } # authentic repl
+def print(str)
+  puts str
+end
+
+loop { print(eval(read)) } # authentic repl
 
